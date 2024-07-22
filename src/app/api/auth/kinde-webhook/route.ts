@@ -3,6 +3,12 @@ import jwksClient from "jwks-rsa";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "@/lib/db";
 
+interface userDataType {
+    id: string;
+    email: string;
+    name: string;
+}
+
 const client = jwksClient({
     jwksUri: `${process.env.KINDE_ISSUER_URL}/.well-known/jwks.json`,
 });
@@ -31,32 +37,12 @@ export async function POST(req: Request) {
 
         // Handle various events
         if (event?.type === "user.created" || event?.type === "user.updated") {
-            const userData = event.data as {
+            const userData = (await event.data) as {
                 id: string;
                 email: string;
                 name: string;
             };
-            if (!userData.id || !userData.email || !userData.name) {
-                throw new Error(
-                    "Invalid user data: id, email, and name are required"
-                );
-            }
-
-            // Insert or update the user in the database
-            await prisma.user.upsert({
-                where: { id: userData.id, email: userData.email },
-                update: {
-                    email: userData.email,
-                    name: userData.name,
-                },
-                create: {
-                    id: userData.id,
-                    email: userData.email,
-                    name: userData.name,
-                },
-            });
-
-            console.log(`User ${event.type} event handled:`, userData);
+            upsertUser(userData);
         }
     } catch (err) {
         if (err instanceof Error) {
@@ -66,3 +52,27 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ status: 200, statusText: "success" });
 }
+
+const upsertUser = async (userData: userDataType) => {
+    if (!userData || !userData.id || !userData.email || !userData.name) {
+        throw new Error("User data is incomplete");
+    }
+
+    try {
+        const result = await prisma.user.upsert({
+            where: { id: userData.id, email: userData.email }, // Use a unique identifier
+            update: {
+                email: userData.email,
+                name: userData.name,
+            },
+            create: {
+                id: userData.id,
+                email: userData.email,
+                name: userData.name,
+            },
+        });
+        console.log("Upsert Result:", result);
+    } catch (error) {
+        console.error("Error upserting user:", error);
+    }
+};
