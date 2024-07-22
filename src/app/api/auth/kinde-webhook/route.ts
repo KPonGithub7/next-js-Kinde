@@ -37,13 +37,28 @@ export async function POST(req: Request) {
 
         // Handle various events
         if (event?.type === "user.created" || event?.type === "user.updated") {
-            const userData = (await event.data) as {
-                id: string;
-                email: string;
-                name: string;
+            const userData = event.data as {
+              id: string;
+              email: string;
+              name: string;
             };
-            upsertUser(userData);
-        }
+      
+            // Insert or update the user in the database
+            await prisma.user.upsert({
+              where: { id: userData.id },
+              update: {
+                email: userData.email,
+                name: userData.name,
+              },
+              create: {
+                id: userData.id,
+                email: userData.email,
+                name: userData.name,
+              },
+            });
+      
+            console.log(`User ${event.type} event handled:`, userData);
+          }
     } catch (err) {
         if (err instanceof Error) {
             console.error(err.message);
