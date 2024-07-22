@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import jwksClient from "jwks-rsa";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import prisma from "@/lib/db";
 
-// The Kinde issuer URL should already be in your `.env` file
-// from when you initially set up Kinde. This will fetch your
-// public JSON web keys file
 const client = jwksClient({
     jwksUri: `${process.env.KINDE_ISSUER_URL}/.well-known/jwks.json`,
 });
 
 export async function POST(req: Request) {
     try {
-        // Get the token from the request
         const token = await req.text();
 
         if (!token) {
@@ -33,21 +30,29 @@ export async function POST(req: Request) {
         const event = jwt.verify(token, signingKey) as JwtPayload;
 
         // Handle various events
-        switch (event?.type) {
-            case "user.updated":
-                // handle user updated event
-                // e.g update database with event.data
-                console.log(event.data);
-                break;
-            case "user.created":
-                // handle user created event
-                // e.g add user to database with event.data
-                console.log(event.data);
-                break;
-            default:
-                // other events that we don't handle
-                break;
-        }
+        if (event?.type === "user.created" || event?.type === "user.updated") {
+            const userData = event.data as {
+              id: string;
+              email: string;
+              name: string;
+            };
+      
+            // Insert or update the user in the database
+            await prisma.user.upsert({
+              where: { id: userData.id },
+              update: {
+                email: userData.email,
+                name: userData.name,
+              },
+              create: {
+                id: userData.id,
+                email: userData.email,
+                name: userData.name,
+              },
+            });
+      
+            console.log(`User ${event.type} event handled:`, userData);
+          }
     } catch (err) {
         if (err instanceof Error) {
             console.error(err.message);

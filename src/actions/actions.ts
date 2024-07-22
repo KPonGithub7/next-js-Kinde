@@ -7,11 +7,13 @@ import { redirect } from "next/navigation";
 //for server actions
 
 export const createPost = async (formData: FormData) => {
-    const { isAuthenticated } = getKindeServerSession();
+    const { isAuthenticated, getUser } = getKindeServerSession();
 
     if (!(await isAuthenticated())) {
         redirect("/api/auth/login");
     }
+
+    const data = await getUser();
 
     const title = formData.get("title") as string;
     const body = formData.get("body") as string;
@@ -21,6 +23,11 @@ export const createPost = async (formData: FormData) => {
         data: {
             title,
             body,
+            author: {
+                connect: {
+                    id: data?.id,
+                },
+            },
         },
     });
 

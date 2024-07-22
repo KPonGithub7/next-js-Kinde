@@ -11,10 +11,19 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
+model User {
+  id    String @id @default(cuid())
+  name  String
+  email String @unique
+  posts Post[]
+}
+
 model Post {
   id        Int      @id @default(autoincrement())
   title     String
   body      String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String   @unique
   createdAt DateTime @default(now())
   updateAt  DateTime @updatedAt
 }
