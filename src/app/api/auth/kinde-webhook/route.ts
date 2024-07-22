@@ -37,28 +37,37 @@ export async function POST(req: Request) {
 
         // Handle various events
         if (event?.type === "user.created" || event?.type === "user.updated") {
-            const userData = event.data as {
-              id: string;
-              email: string;
-              name: string;
+            const userData = (await event.data) as {
+                id: string;
+                email: string;
+                name: string;
             };
-      
+
+            if (
+                !userData ||
+                !userData.id ||
+                !userData.email ||
+                !userData.name
+            ) {
+                throw new Error("User data is incomplete");
+            }
+
             // Insert or update the user in the database
             await prisma.user.upsert({
-              where: { id: userData.id },
-              update: {
-                email: userData.email,
-                name: userData.name,
-              },
-              create: {
-                id: userData.id,
-                email: userData.email,
-                name: userData.name,
-              },
+                where: { id: userData.id, email: userData.email },
+                update: {
+                    email: userData.email,
+                    name: userData.name,
+                },
+                create: {
+                    id: userData.id,
+                    email: userData.email,
+                    name: userData.name,
+                },
             });
-      
+
             console.log(`User ${event.type} event handled:`, userData);
-          }
+        }
     } catch (err) {
         if (err instanceof Error) {
             console.error(err.message);
@@ -67,27 +76,3 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ status: 200, statusText: "success" });
 }
-
-const upsertUser = async (userData: userDataType) => {
-    if (!userData || !userData.id || !userData.email || !userData.name) {
-        throw new Error("User data is incomplete");
-    }
-
-    try {
-        const result = await prisma.user.upsert({
-            where: { id: userData.id, email: userData.email }, // Use a unique identifier
-            update: {
-                email: userData.email,
-                name: userData.name,
-            },
-            create: {
-                id: userData.id,
-                email: userData.email,
-                name: userData.name,
-            },
-        });
-        console.log("Upsert Result:", result);
-    } catch (error) {
-        console.error("Error upserting user:", error);
-    }
-};

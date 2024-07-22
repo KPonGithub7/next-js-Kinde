@@ -1,6 +1,9 @@
-import Image from "next/image";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import exp from "constants";
 
-export default function Home() {
+const Home = async () => {
+    const { getUser } = getKindeServerSession();
+    const user = await getUser();
     return (
         <main className="text-center pt-32 px-5">
             <h1 className="text-4xl font-bold"> Home</h1>
@@ -12,4 +15,6 @@ export default function Home() {
             </p>
         </main>
     );
-}
+};
+
+export default Home;
