@@ -7,7 +7,7 @@ import React from "react";
 const navLinks = [
     {
         href: "/",
-        label: "Home",
+        lable: "Home",
     },
     {
         href: "/posts",
@@ -46,7 +46,7 @@ const Header = () => {
                                 }`}
                                 href={item.href}
                             >
-                                {item.label}
+                                {item.lable}
                             </Link>
                         </li>
                     ))}
