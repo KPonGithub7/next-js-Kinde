@@ -37,11 +37,7 @@ export async function POST(req: Request) {
 
         // Handle various events
         if (event?.type === "user.created" || event?.type === "user.updated") {
-            const userData = (await event.data) as {
-                id: string;
-                email: string;
-                first_name: string;
-            };
+            const userData = await event.data;
 
             if (
                 !userData ||
@@ -49,7 +45,7 @@ export async function POST(req: Request) {
                 !userData.email ||
                 !userData.first_name
             ) {
-                console.error("consoling", userData.id, userData.email, userData.first_name);
+                console.error("consoling", userData.user);
                 throw new Error("User data is incomplete");
             }
 
