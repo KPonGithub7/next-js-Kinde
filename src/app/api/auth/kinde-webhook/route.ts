@@ -40,21 +40,20 @@ export async function POST(req: Request) {
             const userData = await event.data;
 
             if (
-                !userData ||
-                !userData.id ||
-                !userData.email ||
-                !userData.first_name
+                !userData.user ||
+                !userData.user.id ||
+                !userData.user.email ||
+                !userData.user.first_name
             ) {
-                console.error("consoling", userData.user);
                 throw new Error("User data is incomplete");
             }
 
             // Insert or update the user in the database
             await prisma.user.create({
                 data: {
-                    id: userData.id,
-                    email: userData.email,
-                    name: userData.first_name,
+                    id: userData.user.id,
+                    email: userData.user.email,
+                    name: userData.user.first_name,
                 },
             });
 
