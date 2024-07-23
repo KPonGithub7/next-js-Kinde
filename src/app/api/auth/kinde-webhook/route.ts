@@ -49,6 +49,7 @@ export async function POST(req: Request) {
                 !userData.email ||
                 !userData.name
             ) {
+                console.error("consoling", userData);
                 throw new Error("User data is incomplete");
             }
 
